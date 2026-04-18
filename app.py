@@ -1,10 +1,12 @@
 import sqlite3
-from datetime import datetime
 from flask import Flask, request, jsonify, render_template
 import requests
 import os
 from dotenv import load_dotenv
 
+# =========================
+# 🗄️ Initialize Database
+# =========================
 def init_db():
     conn = sqlite3.connect("payments.db")
     c = conn.cursor()
@@ -20,19 +22,27 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Load environment variables
+
+# =========================
+# 🔐 Load ENV
+# =========================
 load_dotenv()
 
 app = Flask(__name__)
 
 CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID")
 SECRET = os.getenv("PAYPAL_SECRET")
+
 print("CLIENT_ID:", CLIENT_ID)
 print("SECRET:", SECRET)
-BASE = BASE = "https://api-m.paypal.com"
+
+# ✅ LIVE PayPal
+BASE = "https://api-m.paypal.com"
 
 
-# 🔐 Get PayPal Access Token
+# =========================
+# 🔑 Get Access Token
+# =========================
 def get_access_token():
     response = requests.post(
         f"{BASE}/v1/oauth2/token",
@@ -40,19 +50,23 @@ def get_access_token():
         data={"grant_type": "client_credentials"},
     )
 
-    print("PAYPAL RESPONSE:", response.text)  # Debug
+    print("PAYPAL TOKEN RESPONSE:", response.text)
 
     data = response.json()
     return data.get("access_token")
 
 
-# 🌐 Home page
+# =========================
+# 🌐 Home
+# =========================
 @app.route("/")
 def home():
     return render_template("index.html", client_id=CLIENT_ID)
 
 
-# 💳 Create PayPal Order
+# =========================
+# 💳 Create Order
+# =========================
 @app.route("/create-order", methods=["POST"])
 def create_order():
     amount = request.json.get("amount")
@@ -82,10 +96,15 @@ def create_order():
     return jsonify(response.json())
 
 
+# =========================
 # ✅ Capture Payment
+# =========================
 @app.route("/capture-order/<order_id>", methods=["POST"])
 def capture_order(order_id):
     token = get_access_token()
+
+    if not token:
+        return jsonify({"error": "Failed to get access token"}), 500
 
     response = requests.post(
         f"{BASE}/v2/checkout/orders/{order_id}/capture",
@@ -95,24 +114,25 @@ def capture_order(order_id):
     data = response.json()
     print("PAYPAL FULL RESPONSE:", data)
 
-    # ✅ CORRECT INDENTATION STARTS HERE
+    # 🔥 Extract amount safely
     try:
-        purchase_units = data.get("purchase_units", [])
-        if purchase_units:
-            payments = purchase_units[0].get("payments", {})
-            captures = payments.get("captures", [])
-            if captures:
-                amount = captures[0]["amount"]["value"]
+        if "purchase_units" in data:
+            pu = data["purchase_units"][0]
+
+            if "payments" in pu and "captures" in pu["payments"]:
+                amount = pu["payments"]["captures"][0]["amount"]["value"]
+            elif "amount" in pu:
+                amount = pu["amount"]["value"]
             else:
                 amount = "0"
         else:
             amount = "0"
+
     except Exception as e:
         print("Amount extraction error:", e)
         amount = "0"
-    # ✅ END
 
-    import sqlite3
+    # 💾 Save payment
     conn = sqlite3.connect("payments.db")
     c = conn.cursor()
 
@@ -126,23 +146,12 @@ def capture_order(order_id):
 
     return jsonify(data)
 
-    token = get_access_token()
 
-    if not token:
-        return jsonify({"error": "Failed to get access token"}), 500
-
-    response = requests.post(
-        f"{BASE}/v2/checkout/orders/{order_id}/capture",
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
-    )
-
-    return jsonify(response.json())
-
+# =========================
+# 📊 Dashboard
+# =========================
 @app.route("/dashboard")
 def dashboard():
-    import sqlite3
     conn = sqlite3.connect("payments.db")
     c = conn.cursor()
 
@@ -152,7 +161,12 @@ def dashboard():
     conn.close()
 
     return render_template("dashboard.html", payments=payments)
-# ▶️ Run app
+
+
+# =========================
+# ▶️ Run App
+# =========================
 init_db()
+
 if __name__ == "__main__":
     app.run(debug=True)
