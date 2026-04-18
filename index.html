@@ -20,25 +20,39 @@
 <script>
 paypal.Buttons({
     createOrder: function(data, actions) {
+        const amount = document.getElementById("amount").value;
+
+        if (!amount) {
+            alert("Enter amount first");
+            return;
+        }
+
         return fetch('/create-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                amount: document.querySelector('#amount').value
-            })
-        }).then(res => res.json())
-          .then(data => data.id);
+            body: JSON.stringify({ amount: amount })
+        })
+        .then(res => res.json())
+        .then(data => data.id);
     },
 
     onApprove: function(data, actions) {
         return fetch(`/capture-order/${data.orderID}`, {
             method: 'POST'
-        }).then(res => res.json())
-          .then(details => {
-              alert("Payment successful!");
-          });
+        })
+        .then(res => res.json())
+        .then(details => {
+            alert("Payment successful!");
+        });
+    },
+
+    onError: function(err) {
+        console.error("PayPal error:", err);
+        alert("Something went wrong");
     }
+
 }).render('#paypal-button-container');
+</script>
 
 </body>
 </html>
