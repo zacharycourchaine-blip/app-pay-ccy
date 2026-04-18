@@ -87,6 +87,34 @@ def create_order():
 def capture_order(order_id):
     token = get_access_token()
 
+    response = requests.post(
+        f"{BASE}/v2/checkout/orders/{order_id}/capture",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    data = response.json()
+
+    try:
+        amount = data["purchase_units"][0]["payments"]["captures"][0]["amount"]["value"]
+    except:
+        amount = "0"
+
+    # Save to database
+    import sqlite3
+    conn = sqlite3.connect("payments.db")
+    c = conn.cursor()
+
+    c.execute(
+        "INSERT INTO payments (order_id, amount, status, created_at) VALUES (?, ?, ?, datetime('now'))",
+        (order_id, amount, "COMPLETED")
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify(data)
+    token = get_access_token()
+
     if not token:
         return jsonify({"error": "Failed to get access token"}), 500
 
@@ -99,7 +127,18 @@ def capture_order(order_id):
 
     return jsonify(response.json())
 
+@app.route("/dashboard")
+def dashboard():
+    import sqlite3
+    conn = sqlite3.connect("payments.db")
+    c = conn.cursor()
 
+    c.execute("SELECT * FROM payments ORDER BY id DESC")
+    payments = c.fetchall()
+
+    conn.close()
+
+    return render_template("dashboard.html", payments=payments)
 # ▶️ Run app
 init_db()
 if __name__ == "__main__":

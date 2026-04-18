@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <style>
+        body {
+            background: #0b1220;
+            color: white;
+            font-family: Arial;
+            padding: 40px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            background: #111827;
+        }
+
+        tr:hover {
+            background: #1f2937;
+        }
+    </style>
+</head>
+<body>
+
+<h1>💰 Payment Dashboard</h1>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Order ID</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Date</th>
+    </tr>
+
+    {% for p in payments %}
+    <tr>
+        <td>{{ p[0] }}</td>
+        <td>{{ p[1] }}</td>
+        <td>${{ p[2] }}</td>
+        <td>{{ p[3] }}</td>
+        <td>{{ p[4] }}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+</body>
+</html>
