@@ -2,8 +2,6 @@
 <html>
 <head>
   <title>PayFlow</title>
-
-  <!-- PayPal SDK -->
   <script src="https://www.paypal.com/sdk/js?client-id={{ client_id }}&currency=USD"></script>
 </head>
 
@@ -27,11 +25,12 @@ paypal.Buttons({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ amount: amount })
         })
-       .then(res => res.json())
-.then(data => {
-    console.log("ORDER RESPONSE:", data);
-    return data.id;
-});
+        .then(res => res.json())
+        .then(data => {
+            console.log("ORDER:", data);
+            return data.id;
+        });
+    },
 
     onApprove: function(data, actions) {
         return fetch(`/capture-order/${data.orderID}`, {
@@ -44,11 +43,12 @@ paypal.Buttons({
     },
 
     onError: function(err) {
-        console.error("PayPal error:", err);
-        alert("Error occurred");
+        console.error(err);
+        alert("Payment failed");
     }
 
 }).render('#paypal-button-container');
 </script>
+
 </body>
 </html>
