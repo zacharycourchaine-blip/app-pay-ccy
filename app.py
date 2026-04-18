@@ -1,7 +1,24 @@
+import sqlite3
+from datetime import datetime
 from flask import Flask, request, jsonify, render_template
 import requests
 import os
 from dotenv import load_dotenv
+
+def init_db():
+    conn = sqlite3.connect("payments.db")
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id TEXT,
+            amount TEXT,
+            status TEXT,
+            created_at TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
 
 # Load environment variables
 load_dotenv()
@@ -84,5 +101,6 @@ def capture_order(order_id):
 
 
 # ▶️ Run app
+init_db()
 if __name__ == "__main__":
     app.run(debug=True)
