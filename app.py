@@ -29,7 +29,7 @@ CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID")
 SECRET = os.getenv("PAYPAL_SECRET")
 print("CLIENT_ID:", CLIENT_ID)
 print("SECRET:", SECRET)
-BASE = "https://api-m.sandbox.paypal.com"
+BASE = BASE = "https://api-m.paypal.com"
 
 
 # 🔐 Get PayPal Access Token
