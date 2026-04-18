@@ -4,7 +4,7 @@
   <title>PayFlow</title>
 
   <!-- PayPal SDK -->
-  <script src="https://www.paypal.com/sdk/js?client-id={{ client_id }}&enable-funding=card&disable-funding=paylater"></script>
+  <script src="https://www.paypal.com/sdk/js?client-id={{ client_id }}&currency=USD"></script>
 </head>
 
 <body style="background:#0f172a;color:white;text-align:center;padding-top:100px;">
@@ -21,11 +21,6 @@
 paypal.Buttons({
     createOrder: function(data, actions) {
         const amount = document.getElementById("amount").value;
-
-        if (!amount) {
-            alert("Enter amount first");
-            return;
-        }
 
         return fetch('/create-order', {
             method: 'POST',
@@ -48,11 +43,10 @@ paypal.Buttons({
 
     onError: function(err) {
         console.error("PayPal error:", err);
-        alert("Something went wrong");
+        alert("Error occurred");
     }
 
 }).render('#paypal-button-container');
 </script>
-
 </body>
 </html>
