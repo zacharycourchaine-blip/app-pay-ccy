@@ -93,24 +93,25 @@ def capture_order(order_id):
     )
 
     data = response.json()
-print("PAYPAL FULL RESPONSE:", data)
+    print("PAYPAL FULL RESPONSE:", data)
 
+    # ✅ CORRECT INDENTATION STARTS HERE
     try:
-    purchase_units = data.get("purchase_units", [])
-    if purchase_units:
-        payments = purchase_units[0].get("payments", {})
-        captures = payments.get("captures", [])
-        if captures:
-            amount = captures[0]["amount"]["value"]
+        purchase_units = data.get("purchase_units", [])
+        if purchase_units:
+            payments = purchase_units[0].get("payments", {})
+            captures = payments.get("captures", [])
+            if captures:
+                amount = captures[0]["amount"]["value"]
+            else:
+                amount = "0"
         else:
             amount = "0"
-    else:
+    except Exception as e:
+        print("Amount extraction error:", e)
         amount = "0"
-except Exception as e:
-    print("Amount extraction error:", e)
-    amount = "0"
+    # ✅ END
 
-    # Save to database
     import sqlite3
     conn = sqlite3.connect("payments.db")
     c = conn.cursor()
@@ -124,6 +125,7 @@ except Exception as e:
     conn.close()
 
     return jsonify(data)
+
     token = get_access_token()
 
     if not token:
