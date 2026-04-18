@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PayFlow</title>
+
+  <!-- PayPal SDK -->
+  <script src="https://www.paypal.com/sdk/js?client-id={{ client_id }}"></script>
+</head>
+
+<body style="background:#0f172a;color:white;text-align:center;padding-top:100px;">
+
+<h2>PayFlow</h2>
+
+<input id="amount" placeholder="Enter amount" style="padding:10px;" />
+
+<br><br>
+
+<div id="paypal-button-container"></div>
+
+<script>
+paypal.Buttons({
+
+  createOrder: async () => {
+    const amount = document.getElementById('amount').value;
+
+    const res = await fetch('/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount })
+    });
+
+    const data = await res.json();
+    return data.id;
+  },
+
+  onApprove: async (data) => {
+    await fetch(`/capture-order/${data.orderID}`, {
+      method: 'POST'
+    });
+
+    alert('Payment successful!');
+  }
+
+}).render('#paypal-button-container');
+</script>
+
+</body>
+</html>
